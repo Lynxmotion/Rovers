@@ -2,21 +2,23 @@
 #include <PS2X_lib.h>
 #include <EEPROM.h>
 
+// Uncomment to obtain debug information in serial monitor
 //#define DEBUG
+#define DEBUG_BAUD  9300
 
-//comment to disable the Force Sensitive Resister on the gripper
+// Comment to disable the Force Sensitive Resister on the gripper
 //#define FSRG
 
-//FSRG pin Must be analog!!
+// FSRG pin Must be analog!!
 #define FSRG_pin A1
 
-//Select which arm by uncommenting the corresponding line
+// Select which arm by uncommenting the corresponding line
 //#define AL5A
 //#define AL5B
 #define AL5D
 
-//uncomment for digital servos in the Shoulder and Elbow
-//that use a range of 900ms to 2100ms
+// Uncomment for digital servos in the Shoulder and Elbow
+// that use a range of 900ms to 2100ms
 //#define DIGITAL_RANGE
 
 #ifdef AL5A
@@ -30,16 +32,16 @@ const float A = 5.75;
 const float B = 7.375;
 #endif
 
-//PS2 pins
-#define DAT 6
-#define CMD 7
-#define ATT 8
-#define CLK 9
+// PS2 input pins
+#define PS2_DAT 8    // Some assembly instructions may have DAT & ATT reversed. If your PS2 receiver is not found in debug, try reversing the pin numbers.
+#define PS2_CMD 7
+#define PS2_ATT 6    // Some assembly instructions may have DAT & ATT reversed. If your PS2 receiver is not found in debug, try reversing the pin numbers.
+#define PS2_CLK 9
 
-//PS2 analog joystick Deadzone
+// PS2 analog joystick Deadzone
 #define Deadzone 4
 
-//Arm Servo pins
+// Arm Servo pins
 #define Base_pin 2
 #define Shoulder_pin 3
 #define Elbow_pin 4
@@ -47,35 +49,38 @@ const float B = 7.375;
 #define Gripper_pin 11
 #define WristR_pin 12
 
-//Rover Servo pins
-#define Throttle_pin A2
-#define Steering_pin A3
+// Rover motor control mode
+#define ROVER_DIFFERENTIAL    // Mixed mode is used. DIP switch #1 is ON on the Sabertooth controller. Comment this line to go into independant mode (switch #1 OFF).
 
-//Onboard Speaker
+// Rover Servo pins
+#define Throttle_pin A2      // In independant mode, throttle is used as the LEFT motor channel. Reverse pin numbers if going backwards.
+#define Steering_pin A3      // In independant mode, steering is used as the RIGHT motor channel. Reverse pin numbers if going backwards.
+
+// Onboard Speaker
 #define Speaker_pin 5
 
-//Radians to Degrees constant
+// Radians to Degrees constant
 const float rtod = 57.295779;
 
-//Arm Speed Variables
+// Arm Speed Variables
 float Speed = 1.0;
 int sps = 3;
 
-//Rover Speed Variables
+// Rover Speed Variables
 float RSpeed = 0.8;
 int Rsps = 3;
 
-//Servo Objects
+// Servo Objects
 Servo Elb;
 Servo Shldr;
 Servo Wrist;
 Servo Base;
 Servo WristR;
 Servo Gripper;
-Servo Throttle;
-Servo Steering;
+Servo Throttle;      // In independant mode, used as the left channel
+Servo Steering;      // In independant mode, used as the right channel
 
-//Arm Current Pos
+// Arm Current Pos
 float X = 4;
 float Y = 4;
 int Z = 90;
@@ -83,7 +88,7 @@ int G = 90;
 int WR = 90;
 float WA = 0;
 
-//Arm temp pos
+// Arm temp pos
 float tmpx = 4;
 float tmpy = 4;
 int tmpz = 90;
@@ -91,39 +96,43 @@ int tmpg = 90;
 int tmpwr = 90;
 float tmpwa = 0;
 
-//PS2X Variables
+// PS2X Variables
 PS2X ps2x;
 int error = 0; 
 byte type = 0;
 
-//Offsets
+// Offsets
 byte Offsets[2] = {127, 127};
 
 boolean mode = true;
 
 void setup()
 {
+  // Attach motor controller pins
   Throttle.attach(Throttle_pin);
   Steering.attach(Steering_pin);
+  
+  // Set default movement to IDLE
   Throttle.writeMicroseconds(1500);
   Steering.writeMicroseconds(1500);
-  pinMode(7, INPUT);
-  if(!digitalRead(7))
+  
+  pinMode(PS2_CMD, INPUT);
+  if(!digitalRead(PS2_CMD))
   {
     tone(Speaker_pin, 1000, 500);
     delay(1000);
-    pinMode(8, INPUT);
-    pinMode(9, INPUT);
+    pinMode(PS2_DAT, INPUT);
+    pinMode(PS2_CLK, INPUT);
     for(int i=1; i>-1; i--)
     {
-      while(digitalRead(7))
+      while(digitalRead(PS2_CMD))
       {
-        if(!digitalRead(8))
+        if(!digitalRead(PS2_DAT))
         {
           Offsets[i] = min(Offsets[i] + 1, 227);
           i? Steering.writeMicroseconds(1500 - 127 + Offsets[i]) : Throttle.writeMicroseconds(1500 - 127 + Offsets[i]);
         }
-        else if(!digitalRead(9))
+        else if(!digitalRead(PS2_CLK))
         {
           Offsets[i] = max(Offsets[i] - 1, 27);
           i? Steering.writeMicroseconds(1500 - 127 + Offsets[i]) : Throttle.writeMicroseconds(1500 - 127 + Offsets[i]);
@@ -146,13 +155,12 @@ void setup()
       Offsets[1] = EEPROM.read(2);
     }
   }
-  
-  
+
 #ifdef DEBUG
-  Serial.begin(115200);
+  Serial.begin(DEBUG_BAUD);
 #endif
 
-  error = ps2x.config_gamepad(CLK,CMD,ATT,DAT, true, true);   //setup pins and settings:  GamePad(clock, command, attention, data, Pressures?, Rumble?) check for error
+  error = ps2x.config_gamepad(PS2_CLK, PS2_CMD, PS2_ATT, PS2_DAT, true, true);   //setup pins and settings:  GamePad(clock, command, attention, data, Pressures?, Rumble?) check for error
   
 #ifdef DEBUG
   if(error == 0)
@@ -181,15 +189,17 @@ void setup()
        break;
     }
 #endif
-Base.attach(Base_pin);
-Shldr.attach(Shoulder_pin);
-Elb.attach(Elbow_pin);
-Wrist.attach(Wrist_pin);
-Gripper.attach(Gripper_pin);
-WristR.attach(WristR_pin);
+
+  // Attach arm servo pins
+  Base.attach(Base_pin);
+  Shldr.attach(Shoulder_pin);
+  Elb.attach(Elbow_pin);
+  Wrist.attach(Wrist_pin);
+  Gripper.attach(Gripper_pin);
+  WristR.attach(WristR_pin);
 }
 
-//will return 1 if move will result in an overflow or crash
+// Will return 1 if move will result in an overflow or crash
 int Arm(float x, float y, float z, int g, float wa, int wr) //Here's all the Inverse Kinematics to control the arm
 {
   float M = sqrt((y*y)+(x*x));
@@ -230,7 +240,6 @@ int Arm(float x, float y, float z, int g, float wa, int wr) //Here's all the Inv
   return 0; 
 }
 
-
 void loop()
 {
   ps2x.read_gamepad(); //update the ps2 controller
@@ -240,6 +249,28 @@ void loop()
   int RSY = 128 - ps2x.Analog(PSS_RY);
   int RSX = ps2x.Analog(PSS_RX) - 128;
   
+  #ifdef DEBUG
+    Serial.print("PS2 Sticks: LX: ");
+    Serial.print(PSS_LX);
+    Serial.print(", LY = ");
+    Serial.print(PSS_LY);
+    Serial.print(", RX = ");
+    Serial.print(PSS_RX);
+    Serial.print(", RY = ");
+    Serial.println(PSS_RY);
+    Serial.print("PS2 Sticks: LSX: ");
+    Serial.print(LSX);
+    Serial.print(", LSY = ");
+    Serial.print(LSY);
+    Serial.print(", RSX = ");
+    Serial.print(RSX);
+    Serial.print(", RSY = ");
+    Serial.println(RSY);
+    Serial.println("");
+    delay(100);
+  #endif
+
+  /* // Mode selection is inactive
   if(ps2x.ButtonPressed(PSB_SELECT))
   {
     mode = !mode;
@@ -249,9 +280,90 @@ void loop()
       Steering.writeMicroseconds(1500 - 127 + Offsets[1]);
     }
   }
+  */
   
+  /*  // Mode selection is inactive
   if(mode)
   {
+  */
+    // Rover wheel control
+    if(ps2x.Button(PSB_RED))
+    {
+      // Turn right
+      #ifdef DEBUG
+        Serial.println("Rover turning right");
+      #endif
+      
+      #ifdef ROVER_DIFFERENTIAL
+        Throttle.write(140);
+        Steering.write(40);
+      #else
+        Throttle.write(140);
+        Steering.write(140);
+      #endif
+    }
+    else if(ps2x.Button(PSB_PINK))
+    {
+      // Turn left
+      #ifdef DEBUG
+        Serial.println("Rover turning left");
+      #endif
+      
+      #ifdef ROVER_DIFFERENTIAL
+        Throttle.write(140);
+        Steering.write(140);
+      #else
+        Throttle.write(40);
+        Steering.write(40);
+      #endif
+    }
+    else if(ps2x.Button(PSB_BLUE))
+    {
+      // Move in reverse
+      #ifdef DEBUG
+        Serial.println("Rover moving in reverse");
+      #endif
+      
+      #ifdef ROVER_DIFFERENTIAL
+        Throttle.write(40);
+        Steering.write(90);
+      #else
+        Throttle.write(40);
+        Steering.write(140);
+      #endif
+    }
+    else if(ps2x.Button(PSB_GREEN))
+    {
+      // Move forward
+      #ifdef DEBUG
+        Serial.println("Rover moving forward");
+      #endif
+      
+      #ifdef ROVER_DIFFERENTIAL
+        Throttle.write(140);
+        Steering.write(90);
+      #else
+        Throttle.write(140);
+        Steering.write(40);
+      #endif
+    }   
+    else
+    {
+      // Idle
+      #ifdef DEBUG
+        Serial.println("Rover idle");
+      #endif
+      
+      #ifdef ROVER_DIFFERENTIAL
+        Throttle.write(90);    // Adjust these values if the servos still move slightly
+        Steering.write(90);
+      #else
+        Throttle.write(90);    // Adjust these values if the servos still move slightly
+        Steering.write(90);
+      #endif
+    }
+    
+    /* // Control using right analog stick & mode is inactive
     if(RSY > Deadzone || RSY < -Deadzone)
       Throttle.writeMicroseconds(3000 - (RSY / 127.0 * 250 * RSpeed + 1500 - 127 + Offsets[0]));
     else
@@ -267,22 +379,56 @@ void loop()
       Rsps = max(Rsps - 1, 1);
       
       RSpeed = Rsps*0.2 + 0.4;
+    */
+    
+  /*  // Mode selection is inactive
   }
   else
   {
+  */
+    // Robotic arm movement control
+    Serial.println("");
+    Serial.print("Arm debug: ");
     if(RSY > Deadzone || RSY < -Deadzone)
+    {
       tmpy = max(Y + RSY/1000.0*Speed, -5);
-    
-    
+
+      #ifdef DEBUG
+        Serial.print(", tmpy = ");
+        Serial.print(tmpy);
+      #endif
+    }
+  
     if(RSX > Deadzone || RSX < -Deadzone)
+    {
       tmpx = max(X + RSX/1000.0*Speed, 0.001);
-      
+
+      #ifdef DEBUG
+        Serial.print(", tmpx = ");
+        Serial.print(tmpx);
+      #endif
+    }
+  
     if(LSY > Deadzone || LSY < -Deadzone)
+    {
       tmpwa = constrain(WA + LSY/100.0*Speed, 0, 180);
 
+      #ifdef DEBUG
+        Serial.print(", tmpwa = ");
+        Serial.print(tmpwa);
+      #endif
+    }
+  
     if(LSX > Deadzone || LSX < -Deadzone)
+    {
       tmpz = constrain(Z + LSX/100.0*Speed, 0, 180);
-   
+
+      #ifdef DEBUG
+        Serial.print(", tmpz = ");
+        Serial.print(tmpz);
+      #endif
+    }
+    
     if(ps2x.Button(PSB_R1))
     {
       #ifdef FSRG
@@ -301,13 +447,17 @@ void loop()
       #else
       tmpg = min(G + 5*Speed, 170);
       #endif
+
+      #ifdef DEBUG
+        Serial.print(", tmpg = ");
+        Serial.print(tmpg);
+      #endif
     }
     if(ps2x.Button(PSB_R2))
     {
       #ifdef FSRG
       while(Gripper.read() > 90)
       {
-        
         Gripper.write(max(Gripper.read() - 2, 90));
         #ifdef DEBUG
         Serial.println(Gripper.read());
@@ -317,46 +467,78 @@ void loop()
       #else
       tmpg = max(G - 5*Speed, 10);
       #endif
+
+      #ifdef DEBUG
+        Serial.print(", tmpg = ");
+        Serial.print(tmpg);
+      #endif
     }
-   
+     
     if(ps2x.Button(PSB_L1))
+    {
       tmpwr = max(WR + 2*Speed, 0);
+
+      #ifdef DEBUG
+        Serial.print(", tmpwr = ");
+        Serial.print(tmpwr);
+      #endif
+    }
     else if(ps2x.Button(PSB_L2))
+    {
       tmpwr = min(WR - 2*Speed, 180);
-   
-   
+      
+      #ifdef DEBUG
+        Serial.print(", tmpwr = ");
+        Serial.print(tmpwr);
+      #endif
+    }
+    
     if(ps2x.ButtonPressed(PSB_PAD_UP))
     {
       sps = min(sps + 1, 5);
       tone(Speaker_pin, sps*500, 200);
+      
+      #ifdef DEBUG
+        Serial.print(", sps = ");
+        Serial.print(sps);
+      #endif
     }
     else if(ps2x.ButtonPressed(PSB_PAD_DOWN))
     {
       sps = max(sps - 1, 1);
       tone(Speaker_pin, sps*500, 200);
+      
+      #ifdef DEBUG
+        Serial.print(", sps = ");
+        Serial.print(sps);
+      #endif
     }
+    #ifdef DEBUG
+      Serial.println("");
+      Serial.println("");
+    #endif
     
     Speed = sps*0.20 + 0.60;
-        
-   if(Arm(tmpx, tmpy, tmpz, tmpg, tmpwa, tmpwr))
-     {
-       #ifdef DEBUG
-       Serial.print("NONREAL Answer");
-       #endif
-     }
-  
-   if(tmpx < 2 && tmpy < 2 && RSX < 0)
-     {
-       tmpy = tmpy + 0.05;
-       Arm(tmpx, tmpy, tmpz, tmpg, tmpwa, tmpwr);
-     }
-   else if(tmpx < 1 && tmpy < 2 && RSY < 0)
-     {
-       tmpx = tmpx + 0.05;
-       Arm(tmpx, tmpy, tmpz, tmpg, tmpwa, tmpwr);
-     }
-  }
- delay(30);
+          
+    if(Arm(tmpx, tmpy, tmpz, tmpg, tmpwa, tmpwr))
+    {
+      #ifdef DEBUG
+      Serial.print("NONREAL Answer");
+      #endif
+    }
+    
+    if(tmpx < 2 && tmpy < 2 && RSX < 0)
+    {
+      tmpy = tmpy + 0.05;
+      Arm(tmpx, tmpy, tmpz, tmpg, tmpwa, tmpwr);
+    }
+    else if(tmpx < 1 && tmpy < 2 && RSY < 0)
+    {
+      tmpx = tmpx + 0.05;
+      Arm(tmpx, tmpy, tmpz, tmpg, tmpwa, tmpwr);
+    }
+    /*  // Mode selection is inactive
+    }
+    */
+  delay(30);
 }
-
-
