@@ -1,0 +1,11 @@
+Make sure your connections for the PS2 controller matches the code. Also, you may want to check where you to wire your servomotors for the arm here and the control for a RC-compatible motor driver (such as a Sabertooth).
+
+The code related to the arm is based on a basic 2D inverse-kinematic system.
+
+In the main loop, you can check which controls of the PS2 are assigned to which part of the robot.
+
+Robotic arm controls: the right side joystick is related to the end-effector X/Y position. The left side joystick is controls the wrist angle and the base rotation. The R1 button and R2 button control the the gripper. The L1 button and L2 button control the wrist rotation. The D-pad up button & down button control the speed of execution of the arm moves.
+
+Rover controls: the red/circle button makes the rover turn right. The pink/square button makes the rover turn left. The blue/X button makes reverse motion. The green/triangle button makes forward motion. If no buttons are pressed, the motors are placed in idle instead.
+
+If you want to activate the debug output, uncomment the define at the top for #debug.
