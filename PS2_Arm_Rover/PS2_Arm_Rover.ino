@@ -4,7 +4,7 @@
 
 // Uncomment to obtain debug information in serial monitor
 //#define DEBUG
-#define DEBUG_BAUD  9300
+#define DEBUG_BAUD  9600
 
 // Comment to disable the Force Sensitive Resister on the gripper
 //#define FSRG
