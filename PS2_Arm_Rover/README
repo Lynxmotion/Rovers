@@ -8,4 +8,4 @@ Robotic arm controls: the right side joystick is related to the end-effector X/Y
 
 Rover controls: the red/circle button makes the rover turn right. The pink/square button makes the rover turn left. The blue/X button makes reverse motion. The green/triangle button makes forward motion. If no buttons are pressed, the motors are placed in idle instead.
 
-If you want to activate the debug output, uncomment the define at the top for #debug.
+If you want to activate the debug output, uncomment the define at the top for #debug and #debug_IK.
