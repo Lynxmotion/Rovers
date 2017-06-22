@@ -399,8 +399,10 @@ void loop()
     {
     */
       // Robotic arm movement control
+      #ifdef DEBUG
       Serial.println("");
       Serial.print("Arm debug: ");
+      #endif
       if(RSY > Deadzone || RSY < -Deadzone)
       {
         tmpy = max(Y + RSY/1000.0*Speed, -5);
