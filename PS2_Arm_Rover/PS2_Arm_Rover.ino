@@ -4,6 +4,7 @@
 
 // Uncomment to obtain debug information in serial monitor
 //#define DEBUG
+//#define DEBUG_IK
 #define DEBUG_BAUD  9600
 
 // Comment to disable the Force Sensitive Resister on the gripper
@@ -103,6 +104,8 @@ byte type = 0;
 
 // Offsets
 byte Offsets[2] = {127, 127};
+
+uint32_t PS2_ErrorCount = 0;
 
 boolean mode = true;
 
@@ -242,303 +245,339 @@ int Arm(float x, float y, float z, int g, float wa, int wr) //Here's all the Inv
 
 void loop()
 {
-  ps2x.read_gamepad(); //update the ps2 controller
-  
-  int LSY = 128 - ps2x.Analog(PSS_LY);
-  int LSX = ps2x.Analog(PSS_LX) - 128;
-  int RSY = 128 - ps2x.Analog(PSS_RY);
-  int RSX = ps2x.Analog(PSS_RX) - 128;
-  
-  #ifdef DEBUG
-    Serial.print("PS2 Sticks: LX: ");
-    Serial.print(PSS_LX);
-    Serial.print(", LY = ");
-    Serial.print(PSS_LY);
-    Serial.print(", RX = ");
-    Serial.print(PSS_RX);
-    Serial.print(", RY = ");
-    Serial.println(PSS_RY);
-    Serial.print("PS2 Sticks: LSX: ");
-    Serial.print(LSX);
-    Serial.print(", LSY = ");
-    Serial.print(LSY);
-    Serial.print(", RSX = ");
-    Serial.print(RSX);
-    Serial.print(", RSY = ");
-    Serial.println(RSY);
-    Serial.println("");
-    delay(100);
-  #endif
+  //update the ps2 controller
+  ps2x.read_gamepad();
 
-  /* // Mode selection is inactive
-  if(ps2x.ButtonPressed(PSB_SELECT))
+  // Check if gamepad read was valid
+  if ((ps2x.Analog(1) & 0xf0) == 0x70)
   {
-    mode = !mode;
-    if(!mode)
-    {
-      Throttle.writeMicroseconds(1500 - 127 + Offsets[0]);
-      Steering.writeMicroseconds(1500 - 127 + Offsets[1]);
-    }
-  }
-  */
+    // Reset error count
+    PS2_ErrorCount = 0;
+    
+    int LSY = 128 - ps2x.Analog(PSS_LY);
+    int LSX = ps2x.Analog(PSS_LX) - 128;
+    int RSY = 128 - ps2x.Analog(PSS_RY);
+    int RSX = ps2x.Analog(PSS_RX) - 128;
+    #ifdef DEBUG_IK
+      Serial.println("LSY\t\tLSX\t\tRSY\t\tRSX");
+      Serial.print(LSY, DEC); Serial.print("\t\t"); Serial.print(LSX, DEC); Serial.print("\t\t"); Serial.print(RSY, DEC); Serial.print("\t\t"); Serial.println(RSX, DEC);
+    #endif 
+    
+    #ifdef DEBUG
+      Serial.print("PS2 Sticks: LX: ");
+      Serial.print(PSS_LX);
+      Serial.print(", LY = ");
+      Serial.print(PSS_LY);
+      Serial.print(", RX = ");
+      Serial.print(PSS_RX);
+      Serial.print(", RY = ");
+      Serial.println(PSS_RY);
+      Serial.print("PS2 Sticks: LSX: ");
+      Serial.print(LSX);
+      Serial.print(", LSY = ");
+      Serial.print(LSY);
+      Serial.print(", RSX = ");
+      Serial.print(RSX);
+      Serial.print(", RSY = ");
+      Serial.println(RSY);
+      Serial.println("");
+      delay(100);
+    #endif
   
-  /*  // Mode selection is inactive
-  if(mode)
-  {
-  */
-    // Rover wheel control
-    if(ps2x.Button(PSB_RED))
+    /* // Mode selection is inactive
+    if(ps2x.ButtonPressed(PSB_SELECT))
     {
-      // Turn right
-      #ifdef DEBUG
-        Serial.println("Rover turning right");
-      #endif
-      
-      #ifdef ROVER_DIFFERENTIAL
-        Throttle.write(140);
-        Steering.write(40);
-      #else
-        Throttle.write(140);
-        Steering.write(140);
-      #endif
+      mode = !mode;
+      if(!mode)
+      {
+        Throttle.writeMicroseconds(1500 - 127 + Offsets[0]);
+        Steering.writeMicroseconds(1500 - 127 + Offsets[1]);
+      }
     }
-    else if(ps2x.Button(PSB_PINK))
-    {
-      // Turn left
-      #ifdef DEBUG
-        Serial.println("Rover turning left");
-      #endif
-      
-      #ifdef ROVER_DIFFERENTIAL
-        Throttle.write(140);
-        Steering.write(140);
-      #else
-        Throttle.write(40);
-        Steering.write(40);
-      #endif
-    }
-    else if(ps2x.Button(PSB_BLUE))
-    {
-      // Move in reverse
-      #ifdef DEBUG
-        Serial.println("Rover moving in reverse");
-      #endif
-      
-      #ifdef ROVER_DIFFERENTIAL
-        Throttle.write(40);
-        Steering.write(90);
-      #else
-        Throttle.write(40);
-        Steering.write(140);
-      #endif
-    }
-    else if(ps2x.Button(PSB_GREEN))
-    {
-      // Move forward
-      #ifdef DEBUG
-        Serial.println("Rover moving forward");
-      #endif
-      
-      #ifdef ROVER_DIFFERENTIAL
-        Throttle.write(140);
-        Steering.write(90);
-      #else
-        Throttle.write(140);
-        Steering.write(40);
-      #endif
-    }   
-    else
-    {
-      // Idle
-      #ifdef DEBUG
-        Serial.println("Rover idle");
-      #endif
-      
-      #ifdef ROVER_DIFFERENTIAL
-        Throttle.write(90);    // Adjust these values if the servos still move slightly
-        Steering.write(90);
-      #else
-        Throttle.write(90);    // Adjust these values if the servos still move slightly
-        Steering.write(90);
-      #endif
-    }
-    
-    /* // Control using right analog stick & mode is inactive
-    if(RSY > Deadzone || RSY < -Deadzone)
-      Throttle.writeMicroseconds(3000 - (RSY / 127.0 * 250 * RSpeed + 1500 - 127 + Offsets[0]));
-    else
-      Throttle.writeMicroseconds(1500 - 127 + Offsets[0]);
-    if(RSX > Deadzone || RSX < -Deadzone)
-      Steering.writeMicroseconds(3000 - (RSX / 127.0 * 250 * RSpeed + 1500 - 127 + Offsets[1]));
-    else
-      Steering.writeMicroseconds(1500 - 127 + Offsets[1]);
-    
-    if(ps2x.ButtonPressed(PSB_PAD_RIGHT))
-      Rsps = min(Rsps + 1, 5);
-    else if(ps2x.ButtonPressed(PSB_PAD_LEFT))
-      Rsps = max(Rsps - 1, 1);
-      
-      RSpeed = Rsps*0.2 + 0.4;
     */
     
-  /*  // Mode selection is inactive
+    /*  // Mode selection is inactive
+    if(mode)
+    {
+    */
+      // Rover wheel control
+      if(ps2x.Button(PSB_RED))
+      {
+        // Turn right
+        #ifdef DEBUG
+          Serial.println("Rover turning right");
+        #endif
+        
+        #ifdef ROVER_DIFFERENTIAL
+          Throttle.write(140);
+          Steering.write(40);
+        #else
+          Throttle.write(140);
+          Steering.write(140);
+        #endif
+      }
+      else if(ps2x.Button(PSB_PINK))
+      {
+        // Turn left
+        #ifdef DEBUG
+          Serial.println("Rover turning left");
+        #endif
+        
+        #ifdef ROVER_DIFFERENTIAL
+          Throttle.write(140);
+          Steering.write(140);
+        #else
+          Throttle.write(40);
+          Steering.write(40);
+        #endif
+      }
+      else if(ps2x.Button(PSB_BLUE))
+      {
+        // Move in reverse
+        #ifdef DEBUG
+          Serial.println("Rover moving in reverse");
+        #endif
+        
+        #ifdef ROVER_DIFFERENTIAL
+          Throttle.write(40);
+          Steering.write(90);
+        #else
+          Throttle.write(40);
+          Steering.write(140);
+        #endif
+      }
+      else if(ps2x.Button(PSB_GREEN))
+      {
+        // Move forward
+        #ifdef DEBUG
+          Serial.println("Rover moving forward");
+        #endif
+        
+        #ifdef ROVER_DIFFERENTIAL
+          Throttle.write(140);
+          Steering.write(90);
+        #else
+          Throttle.write(140);
+          Steering.write(40);
+        #endif
+      }   
+      else
+      {
+        // Idle
+        #ifdef DEBUG
+          Serial.println("Rover idle");
+        #endif
+        
+        #ifdef ROVER_DIFFERENTIAL
+          Throttle.write(90);    // Adjust these values if the servos still move slightly
+          Steering.write(90);
+        #else
+          Throttle.write(90);    // Adjust these values if the servos still move slightly
+          Steering.write(90);
+        #endif
+      }
+      
+      /* // Control using right analog stick & mode is inactive
+      if(RSY > Deadzone || RSY < -Deadzone)
+        Throttle.writeMicroseconds(3000 - (RSY / 127.0 * 250 * RSpeed + 1500 - 127 + Offsets[0]));
+      else
+        Throttle.writeMicroseconds(1500 - 127 + Offsets[0]);
+      if(RSX > Deadzone || RSX < -Deadzone)
+        Steering.writeMicroseconds(3000 - (RSX / 127.0 * 250 * RSpeed + 1500 - 127 + Offsets[1]));
+      else
+        Steering.writeMicroseconds(1500 - 127 + Offsets[1]);
+      
+      if(ps2x.ButtonPressed(PSB_PAD_RIGHT))
+        Rsps = min(Rsps + 1, 5);
+      else if(ps2x.ButtonPressed(PSB_PAD_LEFT))
+        Rsps = max(Rsps - 1, 1);
+        
+        RSpeed = Rsps*0.2 + 0.4;
+      */
+      
+    /*  // Mode selection is inactive
+    }
+    else
+    {
+    */
+      // Robotic arm movement control
+      Serial.println("");
+      Serial.print("Arm debug: ");
+      if(RSY > Deadzone || RSY < -Deadzone)
+      {
+        tmpy = max(Y + RSY/1000.0*Speed, -5);
+        #ifdef DEBUG_IK
+        Serial.print("\ttmpy = "); Serial.print(tmpy, DEC);
+        #endif
+  
+        #ifdef DEBUG
+          Serial.print(", tmpy = ");
+          Serial.print(tmpy);
+        #endif
+      }
+    
+      if(RSX > Deadzone || RSX < -Deadzone)
+      {
+        tmpx = max(X + RSX/1000.0*Speed, 0.001);
+        #ifdef DEBUG_IK
+        Serial.print("\ttmpx = "); Serial.print(tmpx, DEC);
+        #endif
+        
+        #ifdef DEBUG
+          Serial.print(", tmpx = ");
+          Serial.print(tmpx);
+        #endif
+      }
+    
+      if(LSY > Deadzone || LSY < -Deadzone)
+      {
+        tmpwa = constrain(WA + LSY/100.0*Speed, 0, 180);
+        #ifdef DEBUG_IK
+        Serial.print("\ttmpwa = "); Serial.print(tmpwa, DEC);
+        #endif
+  
+        #ifdef DEBUG
+          Serial.print(", tmpwa = ");
+          Serial.print(tmpwa);
+        #endif
+      }
+    
+      if(LSX > Deadzone || LSX < -Deadzone)
+      {
+        tmpz = constrain(Z + LSX/100.0*Speed, 0, 180);
+        #ifdef DEBUG_IK
+        Serial.print("\ttmpz = "); Serial.print(tmpz, DEC);
+        #endif
+  
+        #ifdef DEBUG
+          Serial.print(", tmpz = ");
+          Serial.print(tmpz);
+        #endif
+      }
+
+      #ifdef DEBUG_IK
+      Serial.println("");
+      #endif
+      
+      if(ps2x.Button(PSB_R1))
+      {
+        #ifdef FSRG
+        while(analogRead(FSRG_pin) < 400)
+        {
+          Gripper.write(min(Gripper.read() + 2, 170));
+          if(Gripper.read() == 170)
+            break;
+          #ifdef DEBUG
+          Serial.print(analogRead(FSRG_pin));
+          Serial.print(" ");
+          Serial.println(Gripper.read());
+          #endif
+          delay(10);
+        }
+        #else
+        tmpg = min(G + 5*Speed, 170);
+        #endif
+  
+        #ifdef DEBUG
+          Serial.print(", tmpg = ");
+          Serial.print(tmpg);
+        #endif
+      }
+      if(ps2x.Button(PSB_R2))
+      {
+        #ifdef FSRG
+        while(Gripper.read() > 90)
+        {
+          Gripper.write(max(Gripper.read() - 2, 90));
+          #ifdef DEBUG
+          Serial.println(Gripper.read());
+          #endif
+          delay(10);
+        }
+        #else
+        tmpg = max(G - 5*Speed, 10);
+        #endif
+  
+        #ifdef DEBUG
+          Serial.print(", tmpg = ");
+          Serial.print(tmpg);
+        #endif
+      }
+       
+      if(ps2x.Button(PSB_L1))
+      {
+        tmpwr = max(WR + 2*Speed, 0);
+  
+        #ifdef DEBUG
+          Serial.print(", tmpwr = ");
+          Serial.print(tmpwr);
+        #endif
+      }
+      else if(ps2x.Button(PSB_L2))
+      {
+        tmpwr = min(WR - 2*Speed, 180);
+        
+        #ifdef DEBUG
+          Serial.print(", tmpwr = ");
+          Serial.print(tmpwr);
+        #endif
+      }
+      
+      if(ps2x.ButtonPressed(PSB_PAD_UP))
+      {
+        sps = min(sps + 1, 5);
+        tone(Speaker_pin, sps*500, 200);
+        
+        #ifdef DEBUG
+          Serial.print(", sps = ");
+          Serial.print(sps);
+        #endif
+      }
+      else if(ps2x.ButtonPressed(PSB_PAD_DOWN))
+      {
+        sps = max(sps - 1, 1);
+        tone(Speaker_pin, sps*500, 200);
+        
+        #ifdef DEBUG
+          Serial.print(", sps = ");
+          Serial.print(sps);
+        #endif
+      }
+      #ifdef DEBUG
+        Serial.println("");
+        Serial.println("");
+      #endif
+      
+      Speed = sps*0.20 + 0.60;
+            
+      if(Arm(tmpx, tmpy, tmpz, tmpg, tmpwa, tmpwr))
+      {
+        #ifdef DEBUG
+        Serial.print("NONREAL Answer");
+        #endif
+      }
+      
+      if(tmpx < 2 && tmpy < 2 && RSX < 0)
+      {
+        tmpy = tmpy + 0.05;
+        Arm(tmpx, tmpy, tmpz, tmpg, tmpwa, tmpwr);
+      }
+      else if(tmpx < 1 && tmpy < 2 && RSY < 0)
+      {
+        tmpx = tmpx + 0.05;
+        Arm(tmpx, tmpy, tmpz, tmpg, tmpwa, tmpwr);
+      }
+      /*  // Mode selection is inactive
+      }
+      */
+    delay(30);
   }
   else
   {
-  */
-    // Robotic arm movement control
-    Serial.println("");
-    Serial.print("Arm debug: ");
-    if(RSY > Deadzone || RSY < -Deadzone)
-    {
-      tmpy = max(Y + RSY/1000.0*Speed, -5);
-
-      #ifdef DEBUG
-        Serial.print(", tmpy = ");
-        Serial.print(tmpy);
-      #endif
-    }
-  
-    if(RSX > Deadzone || RSX < -Deadzone)
-    {
-      tmpx = max(X + RSX/1000.0*Speed, 0.001);
-
-      #ifdef DEBUG
-        Serial.print(", tmpx = ");
-        Serial.print(tmpx);
-      #endif
-    }
-  
-    if(LSY > Deadzone || LSY < -Deadzone)
-    {
-      tmpwa = constrain(WA + LSY/100.0*Speed, 0, 180);
-
-      #ifdef DEBUG
-        Serial.print(", tmpwa = ");
-        Serial.print(tmpwa);
-      #endif
-    }
-  
-    if(LSX > Deadzone || LSX < -Deadzone)
-    {
-      tmpz = constrain(Z + LSX/100.0*Speed, 0, 180);
-
-      #ifdef DEBUG
-        Serial.print(", tmpz = ");
-        Serial.print(tmpz);
-      #endif
-    }
-    
-    if(ps2x.Button(PSB_R1))
-    {
-      #ifdef FSRG
-      while(analogRead(FSRG_pin) < 400)
-      {
-        Gripper.write(min(Gripper.read() + 2, 170));
-        if(Gripper.read() == 170)
-          break;
-        #ifdef DEBUG
-        Serial.print(analogRead(FSRG_pin));
-        Serial.print(" ");
-        Serial.println(Gripper.read());
-        #endif
-        delay(10);
-      }
-      #else
-      tmpg = min(G + 5*Speed, 170);
-      #endif
-
-      #ifdef DEBUG
-        Serial.print(", tmpg = ");
-        Serial.print(tmpg);
-      #endif
-    }
-    if(ps2x.Button(PSB_R2))
-    {
-      #ifdef FSRG
-      while(Gripper.read() > 90)
-      {
-        Gripper.write(max(Gripper.read() - 2, 90));
-        #ifdef DEBUG
-        Serial.println(Gripper.read());
-        #endif
-        delay(10);
-      }
-      #else
-      tmpg = max(G - 5*Speed, 10);
-      #endif
-
-      #ifdef DEBUG
-        Serial.print(", tmpg = ");
-        Serial.print(tmpg);
-      #endif
-    }
-     
-    if(ps2x.Button(PSB_L1))
-    {
-      tmpwr = max(WR + 2*Speed, 0);
-
-      #ifdef DEBUG
-        Serial.print(", tmpwr = ");
-        Serial.print(tmpwr);
-      #endif
-    }
-    else if(ps2x.Button(PSB_L2))
-    {
-      tmpwr = min(WR - 2*Speed, 180);
-      
-      #ifdef DEBUG
-        Serial.print(", tmpwr = ");
-        Serial.print(tmpwr);
-      #endif
-    }
-    
-    if(ps2x.ButtonPressed(PSB_PAD_UP))
-    {
-      sps = min(sps + 1, 5);
-      tone(Speaker_pin, sps*500, 200);
-      
-      #ifdef DEBUG
-        Serial.print(", sps = ");
-        Serial.print(sps);
-      #endif
-    }
-    else if(ps2x.ButtonPressed(PSB_PAD_DOWN))
-    {
-      sps = max(sps - 1, 1);
-      tone(Speaker_pin, sps*500, 200);
-      
-      #ifdef DEBUG
-        Serial.print(", sps = ");
-        Serial.print(sps);
-      #endif
-    }
+    // error reading gamepad
+    PS2_ErrorCount += 1;
     #ifdef DEBUG
-      Serial.println("");
-      Serial.println("");
+    Serial.print("PS2 Error; count = "); Serial.println(PS2_ErrorCount, DEC);
     #endif
-    
-    Speed = sps*0.20 + 0.60;
-          
-    if(Arm(tmpx, tmpy, tmpz, tmpg, tmpwa, tmpwr))
-    {
-      #ifdef DEBUG
-      Serial.print("NONREAL Answer");
-      #endif
-    }
-    
-    if(tmpx < 2 && tmpy < 2 && RSX < 0)
-    {
-      tmpy = tmpy + 0.05;
-      Arm(tmpx, tmpy, tmpz, tmpg, tmpwa, tmpwr);
-    }
-    else if(tmpx < 1 && tmpy < 2 && RSY < 0)
-    {
-      tmpx = tmpx + 0.05;
-      Arm(tmpx, tmpy, tmpz, tmpg, tmpwa, tmpwr);
-    }
-    /*  // Mode selection is inactive
-    }
-    */
-  delay(30);
+  }
 }
