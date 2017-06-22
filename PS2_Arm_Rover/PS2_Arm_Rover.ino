@@ -159,9 +159,7 @@ void setup()
     }
   }
 
-#ifdef DEBUG
   Serial.begin(DEBUG_BAUD);
-#endif
 
   error = ps2x.config_gamepad(PS2_CLK, PS2_CMD, PS2_ATT, PS2_DAT, true, true);   //setup pins and settings:  GamePad(clock, command, attention, data, Pressures?, Rumble?) check for error
   
