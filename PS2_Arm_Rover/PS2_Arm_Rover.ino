@@ -39,7 +39,7 @@ const float B = 7.375;
 #define PS2_CLK 9
 
 // PS2 analog joystick Deadzone
-#define Deadzone 4
+#define Deadzone 10
 
 // Arm Servo pins
 #define Base_pin 2
