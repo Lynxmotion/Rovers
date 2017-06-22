@@ -441,10 +441,25 @@ void loop()
           Serial.print(tmpwa);
         #endif
       }
-    
+
       if(LSX > Deadzone || LSX < -Deadzone)
       {
-        tmpz = constrain(Z + LSX/100.0*Speed, 0, 180);
+        // Get motion delta (base rotation)
+        float delta = (((float)LSX / 100.0) * Speed);
+        
+        // Correct for integer conversion
+        if(delta > 0)
+        {
+          delta = ceil(delta);
+        }
+        else
+        {
+          delta = floor(delta);
+        }
+
+        // Apply to angle
+        tmpz = constrain((Z + delta), 0, 180);
+
         #ifdef DEBUG_IK
         Serial.print("\ttmpz = "); Serial.print(tmpz, DEC);
         #endif
