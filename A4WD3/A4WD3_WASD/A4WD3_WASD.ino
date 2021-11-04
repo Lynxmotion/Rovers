@@ -1,3 +1,6 @@
+// This example can use either one or two sabertooths
+  int sabertoothCount = 2;
+  
 // Libraries used in this example
   #include <Servo.h> 
 
@@ -13,8 +16,10 @@
   int RF_Pin = 6;
   int RR_Pin = 9;
 
+// Variable for the fixed speed of movement between 0 and 100
+  int mainSpeed = 10;
+
 // Variables for the different signals
-  int mainSpeed = 25;
   int LF_Signal = 0;
   int LR_Signal = 0;
   int RF_Signal = 0;
@@ -90,8 +95,14 @@ void outputMix(){
 }
 
 void outputsUpdate(void){
-  LF_Motor.writeMicroseconds(map(LF_Signal, 100, -100, 2000, 1000));
-  LR_Motor.writeMicroseconds(map(LR_Signal, 100, -100, 2000, 1000));
-  RF_Motor.writeMicroseconds(map(RF_Signal, 100, -100, 2000, 1000));
-  RR_Motor.writeMicroseconds(map(RR_Signal, 100, -100, 2000, 1000));
+  if (sabertoothCount == 1){
+    LF_Motor.writeMicroseconds(map(LF_Signal, 100, -100, 2000, 1000));
+    RF_Motor.writeMicroseconds(map(RF_Signal, 100, -100, 2000, 1000));
+  }
+  else if (sabertoothCount == 2){
+    LF_Motor.writeMicroseconds(map(LF_Signal, 100, -100, 2000, 1000));
+    LR_Motor.writeMicroseconds(map(LR_Signal, 100, -100, 2000, 1000));
+    RF_Motor.writeMicroseconds(map(RF_Signal, 100, -100, 2000, 1000));
+    RR_Motor.writeMicroseconds(map(RR_Signal, 100, -100, 2000, 1000));
+  }
 }
