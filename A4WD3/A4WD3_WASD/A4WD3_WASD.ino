@@ -17,7 +17,7 @@
   int RR_Pin = 9;
 
 // Variable for the fixed speed of movement between 0 and 100
-  int mainSpeed = 10;
+  int mainSpeed = 50;
 
 // Variables for the different signals
   int LF_Signal = 0;
