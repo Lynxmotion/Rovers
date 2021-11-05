@@ -8,9 +8,13 @@ Controls:
   It will not stop by itself so be aware before starting the Rover.
   
   W: Forward
+  
   A: Left
+  
   S: Backward
+  
   D: Right
+  
   Anything else: Stop
 
 Putty Setup:
