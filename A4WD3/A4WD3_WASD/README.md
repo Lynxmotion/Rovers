@@ -13,6 +13,8 @@ S: Backward<br/>
 D: Right<br/>
 Anything else: Stop<br/>
 
+Speed is fixed and can be changed in the sketch under "int mainSpeed = 50;" which means 50% of the maximum speed.<br/>
+
 Putty Setup:
   1. Download & Install Putty (https://www.putty.org/)
   2. Setup a Serial session with your COM port and at 115200 (default) speed
