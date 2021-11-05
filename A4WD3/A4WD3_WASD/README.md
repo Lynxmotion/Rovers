@@ -9,4 +9,4 @@ Putty Setup:
   3. Navigate in "Terminal" option and in "Line discipline options" then select "Local line editing: Force off"
   4. Alternatively you can set "Local echo: Force on" as well
 
-Format: ![Alt Text](https://github.com/Lynxmotion/Rovers/blob/master/A4WD3/A4WD3_WASD/PuttyConfiguration.jpg)
+![Alt Text](https://github.com/Lynxmotion/Rovers/blob/master/A4WD3/A4WD3_WASD/PuttyConfiguration.jpg)
