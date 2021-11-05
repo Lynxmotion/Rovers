@@ -1,10 +1,10 @@
 A4WD3 Rover WASD keyboard example.
 
-In order to use this example you need a serial terminal which doesn't require you to press "Enter" between each keyboard inputs.
+In order to use this example you need a serial terminal which doesn't require you to press "Enter" between each keyboard input.
 We greatly suggest Putty (https://www.putty.org/)
 
 Controls:<br/>
-  This example will take any WASD inputs and will STAY in this until you type another commands.
+  This example will take any WASD inputs and will STAY in this mode until you press another key.
   It will not stop by itself so be aware before starting the Rover.
   
   W: Forward<br/>
