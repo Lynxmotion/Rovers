@@ -4,16 +4,16 @@ In order to use this example you need a serial terminal which doesn't require yo
 We greatly suggest Putty (https://www.putty.org/)
 
 Controls:<br/>
-This example will take any WASD inputs and will STAY in this until you type another commands.
-It will not stop by itself so be aware before starting the Rover.
+  This example will take any WASD inputs and will STAY in this until you type another commands.
+  It will not stop by itself so be aware before starting the Rover.
   
-W: Forward<br/>
-A: Left<br/>
-S: Backward<br/>
-D: Right<br/>
-Anything else: Stop<br/>
+  W: Forward<br/>
+  A: Left<br/>
+  S: Backward<br/>
+  D: Right<br/>
+  Anything else: Stop<br/>
 
-Speed is fixed and can be changed in the sketch under "int mainSpeed = 50;" which means 50% of the maximum speed.<br/>
+  Speed is fixed and can be changed in the sketch under "int mainSpeed = 50;" which means 50% of the maximum speed.<br/>
 
 Putty Setup:
   1. Download & Install Putty (https://www.putty.org/)
