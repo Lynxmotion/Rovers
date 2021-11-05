@@ -10,3 +10,13 @@ Putty Setup:
   4. Alternatively you can set "Local echo: Force on" as well
 
 ![Alt Text](https://github.com/Lynxmotion/Rovers/blob/master/A4WD3/A4WD3_WASD/PuttyConfiguration.jpg)
+
+Controls:
+  This example will take any WASD inputs and will STAY in this until you type another commands.
+  It will not stop by itself so be aware before starting the Rover.
+  
+  W: Forward
+  A: Left
+  S: Backward
+  D: Right
+  Anything else: Stop
