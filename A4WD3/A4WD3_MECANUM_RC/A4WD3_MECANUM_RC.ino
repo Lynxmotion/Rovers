@@ -6,12 +6,13 @@
   long previousMillis = 0;        // will store last time LED was updated
   long interval = 10;           // interval at which to blink (milliseconds)
 
-// 
+// Creation of the Servo Library Objects
   Servo FL_motor;
   Servo RL_motor;
   Servo FR_motor;
   Servo RR_motor;
   
+// Variables to store the speed values that will be sent for each motors
   int motorFLspeed = 0;
   int motorRLspeed = 0;
   int motorFRspeed = 0;
@@ -24,58 +25,61 @@
   int motorRRdirection = 1;
 
 // PPM channel layout (update for your situation)
-#define THROTTLE      3
-#define RUDDER        4
-#define PITCH         2
-#define ROLL          1
-#define SWITCH3WAY_1  5
-#define BUTTON        6
-#define SWITCH3WAY_2  7     // trim-pot for left/right motor mix  (face trim)
-#define POT           8     // trim-pot on the (front left edge trim)
+  #define THROTTLE      3
+  #define RUDDER        4
+  #define PITCH         2
+  #define ROLL          1
+  #define SWITCH3WAY_1  5
+  #define BUTTON        6
+  #define SWITCH3WAY_2  7     // trim-pot for left/right motor mix  (face trim)
+  #define POT           8     // trim-pot on the (front left edge trim)
 
-short throttle;
-short rudder;
-short pitch;
-short roll;
-short switch3way_1;
-short button;
-short switch3way_2;
-short pot;
+  short throttle;
+  short rudder;
+  short pitch;
+  short roll;
+  short switch3way_1;
+  short button;
+  short switch3way_2;
+  short pot;
 
-const int INPUT_DEADBAND = 10;             // consider channel at 0 until at least this much is sensed
-const int OUTPUT_DEADBAND = 20;
+// RC signal deadband
+  const int INPUT_DEADBAND = 10;             // consider channel at 0 until at least this much is sensed
+  const int OUTPUT_DEADBAND = 20;
 
-int mode = 0;
+// Enabling Movement Mode
+  int mode = 0;
 
 
 
 void setup(){ 
-  // Buffer between USB & ATmega for LSS-2IO
+// Buffer between USB & ATmega for LSS-2IO
   pinMode(7, OUTPUT); 
   digitalWrite(7, LOW);
 
-  // Pin mode for the 4 motor outputs
+// Pin mode for the 4 motor outputs
   pinMode(3, OUTPUT);
   pinMode(5, OUTPUT);
   pinMode(6, OUTPUT);
   pinMode(9, OUTPUT);
   
-  // Creation of the "servo" motors
+// Creation of the "servo" motors
   FL_motor.attach(3);
   RL_motor.attach(5);
   FR_motor.attach(6);
   RR_motor.attach(9);
 
-  // Start the PPM function
+// Start the PPM function
   ppm.begin(A0, false);
 
+// Serial port for debug
   Serial.begin(115200);
-
 }
 
 void loop(){  
   unsigned long currentMillis = millis();
- 
+  
+  // Do this at every interval time
   if(currentMillis - previousMillis > interval) { 
     previousMillis = currentMillis;   
     PPMupdate();
