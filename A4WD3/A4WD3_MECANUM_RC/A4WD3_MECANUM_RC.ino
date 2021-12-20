@@ -21,8 +21,8 @@
 // Motor direction modifier either 1 or -1 to change it
   int motorFLdirection = -1;
   int motorRLdirection = 1;
-  int motorFRdirection = -1;
-  int motorRRdirection = 1;
+  int motorFRdirection = 1;
+  int motorRRdirection = -1;
 
 // PPM channel layout (update for your situation)
   #define THROTTLE      3
@@ -44,7 +44,7 @@
   short pot;
 
 // RC signal deadband
-  const int INPUT_DEADBAND = 10;             // consider channel at 0 until at least this much is sensed
+  const int INPUT_DEADBAND = 20;             // consider channel at 0 until at least this much is sensed
   const int OUTPUT_DEADBAND = 20;
 
 // Enabling Movement Mode
@@ -102,7 +102,7 @@ void PPMupdate(){
   throttle        =     constrain(ppm.read_midstick(THROTTLE), -500, 500);
   roll            =   - constrain(ppm.read_midstick(ROLL), -500, 500);
   pitch           =     constrain(ppm.read_midstick(PITCH), -500, 500);
-  rudder          =   - constrain(ppm.read_midstick(RUDDER), -500, 500);
+  rudder          =     constrain(ppm.read_midstick(RUDDER), -500, 500);
   switch3way_1    =     ppm.read_channel(SWITCH3WAY_1);
   button          =     ppm.read_channel(BUTTON);
   switch3way_2    =     ppm.read_channel(SWITCH3WAY_2);
