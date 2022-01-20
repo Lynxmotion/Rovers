@@ -50,8 +50,6 @@
 // Enabling Movement Mode
   int mode = 0;
 
-
-
 void setup(){ 
 // Buffer between USB & ATmega for LSS-2IO
   pinMode(7, OUTPUT); 
@@ -141,27 +139,6 @@ void moveMix(){
   motorRLspeed = deadband(motorRLspeed, OUTPUT_DEADBAND);
   motorFRspeed = deadband(motorFRspeed, OUTPUT_DEADBAND);
   motorRRspeed = deadband(motorRRspeed, OUTPUT_DEADBAND);
-}
-
-void moveForwardReverse(){ 
-  motorFLspeed = deadband((map(pitch, -100, 100, 2000, 1000)), OUTPUT_DEADBAND);
-  motorRLspeed = deadband((map(pitch, -100, 100, 1000, 2000)), OUTPUT_DEADBAND);
-  motorFRspeed = deadband((map(pitch, -100, 100, 2000, 1000)), OUTPUT_DEADBAND);
-  motorRRspeed = deadband((map(pitch, -100, 100, 1000, 2000)), OUTPUT_DEADBAND);
-}
-
-void moveLeftRight(){ 
-  motorFLspeed = deadband((map(roll, -100, 100, 1000, 2000)), OUTPUT_DEADBAND);
-  motorRLspeed = deadband((map(roll, -100, 100, 1000, 2000)), OUTPUT_DEADBAND);
-  motorFRspeed = deadband((map(roll, -100, 100, 2000, 1000)), OUTPUT_DEADBAND);
-  motorRRspeed = deadband((map(roll, -100, 100, 2000, 1000)), OUTPUT_DEADBAND);
-}
-
-void moveCircle(){ 
-  motorFLspeed = deadband((map(rudder, -100, 100, 1000, 2000)), OUTPUT_DEADBAND);
-  motorRLspeed = deadband((map(rudder, -100, 100, 2000, 1000)), OUTPUT_DEADBAND);
-  motorFRspeed = deadband((map(rudder, -100, 100, 2000, 1000)), OUTPUT_DEADBAND);
-  motorRRspeed = deadband((map(rudder, -100, 100, 1000, 2000)), OUTPUT_DEADBAND);
 }
 
 void debug(){  
