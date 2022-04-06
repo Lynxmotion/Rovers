@@ -1,4 +1,3 @@
-
-Use the following wiring diagram:
-![This is an image](https://github.com/Lynxmotion/Rovers/blob/master/A4WD3/A4WD3_MECANUM_RC/ROVER-A4WD3-Wiring-Diagrams-Mecanum.png)
-
+Wiring Diagrams can be found on the Lynxmotion Wiki:
+- [A4WD3 Mecanum - Wiring](https://wiki.lynxmotion.com/info/wiki/lynxmotion/view/rover-kits/a4wd3-mecanum/a4wd3-mecanum-quickstart/a4wd3-mecanum-wiring/)
+- [A4WD3 Mecanum - Setup](https://wiki.lynxmotion.com/info/wiki/lynxmotion/view/rover-kits/a4wd3-mecanum/a4wd3-mecanum-quickstart/a4wd3-mecanum-setup/)
